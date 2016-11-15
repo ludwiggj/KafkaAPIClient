@@ -25,7 +25,7 @@ public class Producer {
         configProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,"org.apache.kafka.common.serialization.ByteArraySerializer");
         configProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,"org.apache.kafka.common.serialization.StringSerializer");
 
-        configProperties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG,CountryPartitioner.class.getCanonicalName());
+        configProperties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, CountryPartitioner.class.getCanonicalName());
         configProperties.put("partitions.0","USA");
         configProperties.put("partitions.1","India");
 
@@ -36,7 +36,8 @@ public class Producer {
 
             producer.send(rec, new Callback() {
                 public void onCompletion(RecordMetadata metadata, Exception exception) {
-                    System.out.println("Message sent to topic ->" + metadata.topic()+ " ,parition->" + metadata.partition() +" stored at offset->" + metadata.offset());
+                    System.out.println("Message sent to topic ->" + metadata.topic()+ " ,partition->"
+                        + metadata.partition() +" stored at offset->" + metadata.offset());
                 }
             });
             line = in.nextLine();

@@ -4,7 +4,6 @@ import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Properties;
@@ -15,7 +14,6 @@ import java.util.Scanner;
  */
 public class Consumer {
     private static Scanner in;
-    private static boolean stop = false;
 
     public static void main(String[] argv) throws Exception {
         if (argv.length != 2) {
@@ -81,9 +79,7 @@ public class Consumer {
         }
 
         public KafkaConsumer<String, String> getKafkaConsumer() {
-            return this.kafkaConsumer;
+           return this.kafkaConsumer;
         }
     }
 }
-
-

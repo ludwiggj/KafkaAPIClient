@@ -1,9 +1,6 @@
 package com.spnotes.kafka.simple;
 
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.errors.WakeupException;
 
 import java.util.Arrays;
@@ -16,7 +13,7 @@ import java.util.Scanner;
 public class Consumer {
     private static Scanner in;
 
-    public static void main(String[] argv)throws Exception{
+    public static void main(String[] argv) throws Exception {
         if (argv.length != 2) {
             System.err.printf("Usage: %s <topicName> <groupId>\n",
                     Consumer.class.getSimpleName());
@@ -26,26 +23,27 @@ public class Consumer {
         String topicName = argv[0];
         String groupId = argv[1];
 
-        ConsumerThread consumerRunnable = new ConsumerThread(topicName,groupId);
-        consumerRunnable.start();
+        ConsumerThread consumerThread = new ConsumerThread(topicName, groupId);
+        consumerThread.start();
         String line = "";
         while (!line.equals("exit")) {
             line = in.next();
         }
-        consumerRunnable.getKafkaConsumer().wakeup();
+        consumerThread.getKafkaConsumer().wakeup();
         System.out.println("Stopping consumer .....");
-        consumerRunnable.join();
+        consumerThread.join();
     }
 
-    private static class ConsumerThread extends Thread{
+    private static class ConsumerThread extends Thread {
         private String topicName;
         private String groupId;
-        private KafkaConsumer<String,String> kafkaConsumer;
+        private KafkaConsumer<String, String> kafkaConsumer;
 
-        public ConsumerThread(String topicName, String groupId){
+        public ConsumerThread(String topicName, String groupId) {
             this.topicName = topicName;
             this.groupId = groupId;
         }
+
         public void run() {
             Properties configProperties = new Properties();
             configProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
@@ -64,16 +62,16 @@ public class Consumer {
                     for (ConsumerRecord<String, String> record : records)
                         System.out.println(record.value());
                 }
-            }catch(WakeupException ex){
+            } catch (WakeupException ex) {
                 System.out.println("Exception caught " + ex.getMessage());
-            }finally{
+            } finally {
                 kafkaConsumer.close();
                 System.out.println("After closing KafkaConsumer");
             }
         }
-        public KafkaConsumer<String,String> getKafkaConsumer(){
+
+        public KafkaConsumer<String, String> getKafkaConsumer() {
            return this.kafkaConsumer;
         }
     }
 }
-
