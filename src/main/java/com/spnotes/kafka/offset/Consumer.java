@@ -13,8 +13,8 @@ public class Consumer {
   private static Scanner in;
 
   public static void main(String[] argv) throws Exception {
-    if (argv.length != 3) {
-      System.err.printf("Usage: %s <topicName> <groupId> <startingOffset>\n",
+    if (argv.length != 4) {
+      System.err.printf("Usage: %s <topicName> <groupId> <startingOffset> <keyFilter>\n",
           Consumer.class.getSimpleName());
       System.exit(-1);
     }
@@ -22,8 +22,9 @@ public class Consumer {
     String topicName = argv[0];
     String groupId = argv[1];
     final long startingOffset = Long.parseLong(argv[2]);
+    String keyFilter = argv[3];
 
-    ConsumerThread consumerThread = new ConsumerThread(topicName, groupId, startingOffset);
+    ConsumerThread consumerThread = new ConsumerThread(topicName, groupId, startingOffset, keyFilter);
     consumerThread.start();
     String line = "";
     while (!line.equals("exit")) {
@@ -38,18 +39,20 @@ public class Consumer {
     private String topicName;
     private String groupId;
     private long startingOffset;
+    private String keyFilter;
     private KafkaConsumer<String, String> kafkaConsumer;
 
-    public ConsumerThread(String topicName, String groupId, long startingOffset) {
+    public ConsumerThread(String topicName, String groupId, long startingOffset, String keyFilter) {
       this.topicName = topicName;
       this.groupId = groupId;
       this.startingOffset = startingOffset;
+      this.keyFilter = keyFilter;
     }
 
     public void run() {
       Properties configProperties = new Properties();
       configProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-      configProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.ByteArrayDeserializer");
+      configProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
       configProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
       configProperties.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
       configProperties.put(ConsumerConfig.CLIENT_ID_CONFIG, "offset123");
@@ -74,11 +77,13 @@ public class Consumer {
             } else if (startingOffset == 0) {
               System.out.println("Setting offset to beginning");
 
-              kafkaConsumer.seekToBeginning(topicPartition);
+              Collection<TopicPartition> topicPartitions = new ArrayList<TopicPartition>();
+              kafkaConsumer.seekToBeginning(topicPartitions);
             } else if (startingOffset == -1) {
               System.out.println("Setting it to the end ");
 
-              kafkaConsumer.seekToEnd(topicPartition);
+              Collection<TopicPartition> topicPartitions = new ArrayList<TopicPartition>();
+              kafkaConsumer.seekToEnd(topicPartitions);
             } else {
               System.out.println("Resetting offset to " + startingOffset);
 
@@ -92,7 +97,10 @@ public class Consumer {
         while (true) {
           ConsumerRecords<String, String> records = kafkaConsumer.poll(100);
           for (ConsumerRecord<String, String> record : records) {
-            System.out.println(record.value());
+            String key = record.key();
+            if (key.startsWith(keyFilter)) {
+              System.out.println(String.format("Key [%s] Value [%s]", key, record.value()));
+            }
           }
           if (startingOffset == -2)
             kafkaConsumer.commitSync();
